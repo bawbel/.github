@@ -1,0 +1,281 @@
+# Claims register. One entry per public claim.
+#
+# Each claim names a check function in scripts/verify_claims.py, the value the claim
+# must have, and every surface where it is stated. Run the verifier to regenerate
+# claims/STATUS.md. How to add, change, or retire a claim: docs/CLAIMS.md.
+
+schema: bawbel/claims-register/v1
+
+# Repositories the checks read. Cloned shallow, read only. `self: true` means the
+# repository this register lives in, read from the working tree.
+sources:
+  ave: {url: "https://github.com/aveproject/ave"}
+  scanner: {url: "https://github.com/bawbel/scanner"}
+  gate: {url: "https://github.com/bawbel/gate"}
+  website: {url: "https://github.com/bawbel/bawbel.github.io"}
+  integrations: {url: "https://github.com/bawbel/integrations"}
+  bawbel-mcp: {url: "https://github.com/bawbel/bawbel-mcp"}
+  piranha-api: {url: "https://github.com/bawbel/piranha-api"}
+  profile: {url: "https://github.com/bawbel/.github", self: true}
+  registry: {url: "https://github.com/bawbel/bawbel-registry", private: true}
+
+# Public Bawbel repositories whose text is checked for wording and stale strings.
+public_scope: &public_scope
+  [scanner, gate, website, integrations, bawbel-mcp, piranha-api, profile]
+
+# "51 AVE records", "48 records", "40 published records" and similar.
+records_pattern: &records '(?i)\b(\d+) (?:published )?(?:AVE )?records\b'
+
+claims:
+  - id: C-01
+    claim: AVE records published
+    kind: number
+    check: ave_published
+    expect: 87
+    owner: maintainer
+    appears_in:
+      - {source: website, path: index.html,
+         pattern: 'stat-num">(\d+)</div><div class="stat-label">AVE Records'}
+      - {source: website, path: index.html, pattern: *records}
+      - {source: website, path: docs/index.html, pattern: *records}
+      - {source: website, path: README.md, pattern: *records}
+      - {source: scanner, path: README.md, pattern: 'AVE_Records-(\d+)'}
+      - {source: scanner, path: README.md, pattern: *records}
+      - {source: gate, path: ARCHITECTURE.md, pattern: *records}
+      - {source: piranha-api, path: README.md, pattern: *records}
+      - {source: integrations, path: README.md, pattern: *records}
+      - {source: integrations, path: vscode/README.md, pattern: *records}
+      - {source: integrations, path: vscode/package.json, pattern: *records}
+    note: >-
+      gate DESIGN.md 9.2 says "51 published records" about the v1.1 to v1.2 migration of
+      the corpus as it was then. Historical, so not listed.
+
+  - id: C-02
+    claim: AVE records with scanner metadata (scanner/ave_meta.py)
+    kind: number
+    check: scanner_metadata
+    expect: 51
+    owner: maintainer
+    appears_in: []
+    note: >-
+      Not a coverage figure. The "51" on the website and in the scanner README is this
+      number presented as the record count. See C-01 and C-03.
+
+  - id: C-03
+    claim: AVE records detected by a non-LLM engine
+    kind: number
+    check: scanner_detection
+    expect: 43
+    owner: maintainer
+    appears_in: []
+    note: Union of AVE ids in pattern, YARA and Semgrep rules, plus Magika.
+
+  - id: C-04
+    claim: Uncovered records with a static detection stage (rule compiler scope)
+    kind: number
+    check: uncovered_static
+    expect: 27
+    owner: maintainer
+    appears_in: []
+
+  - id: C-05
+    claim: Uncovered records with a runtime detection stage
+    kind: number
+    check: uncovered_runtime
+    expect: 17
+    owner: maintainer
+    appears_in: []
+
+  - id: C-06
+    claim: Toxic flows (attack chains)
+    kind: number
+    check: toxic_flows
+    expect: 12
+    owner: maintainer
+    appears_in:
+      - {source: website, path: index.html,
+         pattern: 'stat-num">(\d+)</div><div class="stat-label">Attack Chains'}
+      - {source: website, path: index.html, pattern: '(?i)\b(\d+) built-in attack chains'}
+      - {source: website, path: docs/index.html, pattern: '(?i)\ball (\d+) toxic flow chains'}
+
+  - id: C-07
+    claim: Detection rules (pattern + YARA + Semgrep)
+    kind: number
+    check: detection_rules
+    expect: 120
+    owner: maintainer
+    appears_in:
+      - {source: website, path: index.html,
+         pattern: 'stat-num">(\d+)</div><div class="stat-label">Detection Rules'}
+      - {source: website, path: index.html, pattern: '(?i)\b(\d+) rules total'}
+      - {source: website, path: docs/index.html, pattern: '(?i)\b(\d+) detection rules'}
+
+  - id: C-08
+    claim: Detection engines (meta_analyzer is an FP filter, not an engine)
+    kind: number
+    check: detection_engines
+    expect: 6
+    owner: maintainer
+    appears_in:
+      - {source: website, path: index.html,
+         pattern: 'stat-num">(\d+)</div><div class="stat-label">Detection Engines'}
+      - {source: website, path: index.html, pattern: '<h3>(\d+) Detection Engines'}
+      - {source: website, path: docs/index.html, pattern: '(?i)\b(\d+) detection engines'}
+      - {source: scanner, path: README.md,
+         pattern: '(?i)\b(\d+|four|five|six|seven|eight) engines run in parallel'}
+      - {source: scanner, path: docs/README.md,
+         pattern: '(?i)\ball (\d+|four|five|six|seven|eight) engines'}
+      - {source: scanner, path: docs/guides/engines.md,
+         pattern: '(?i)\b(\d+|four|five|six|seven|eight) detection engines in sequence'}
+      - {source: scanner, path: docs/guides/engines.md,
+         pattern: '(?i)\ball (\d+|four|five|six|seven|eight) engines'}
+      - {source: profile, path: profile/README.md,
+         pattern: '(?i)\b(\d+|four|five|six|seven|eight) engines run in parallel'}
+
+  - id: C-09
+    claim: Every public Bawbel repository is licensed Apache-2.0
+    kind: state
+    check: license_apache
+    expect: true
+    owner: maintainer
+    params:
+      repos: [bawbel/scanner, bawbel/gate, bawbel/bawbel.github.io, bawbel/integrations,
+              bawbel/bawbel-mcp, bawbel/piranha-api, bawbel/.github, bawbel/factory,
+              aveproject/ave]
+    note: An empty repository has no license to report and is skipped, with a note.
+
+  - id: C-10
+    claim: pip install bawbel-gate works in a clean virtual environment
+    kind: state
+    check: gate_pip_install
+    expect: true
+    owner: maintainer
+
+  - id: C-11
+    claim: Execution wording is qualified
+    kind: wording
+    check: forbidden_text
+    owner: maintainer
+    params:
+      scope: *public_scope
+      forbidden:
+        - '(?i)never executes code'
+        - '(?i)never executes what it scans'
+        - '(?i)never execute scanned content'
+        - '(?i)never evaluates, imports, or runs any content'
+      qualifiers: ['(?i)by default', '(?i)sandbox']
+    note: >-
+      Allowed: "never starts an MCP server", "executes nothing by default", "the optional
+      Docker sandbox stage runs skill content in isolation". A line that names the sandbox
+      or says "by default" counts as qualified.
+
+  - id: C-12
+    claim: Audit wording says tamper-evident, never immutable
+    kind: wording
+    check: forbidden_text
+    owner: maintainer
+    params:
+      scope: *public_scope
+      forbidden: ['(?i)immutable audit']
+
+  - id: C-13
+    claim: The hub is described as read-only, never as control or management
+    kind: wording
+    check: forbidden_text
+    owner: maintainer
+    params:
+      scope: *public_scope
+      forbidden:
+        - '(?i)\bhub\b.{0,80}(control plane|orchestrat|\bmanag)'
+        - '(?i)(control plane|orchestrat|\bmanag).{0,80}\bhub\b'
+    note: >-
+      Allowed: read-only, push-only, no command channel. The hub has no write path into
+      gate (gate DESIGN.md 14.6).
+
+  - id: C-14
+    claim: The registry is designed, not built
+    kind: state
+    check: registry_state
+    expect: designed
+    owner: maintainer
+    params:
+      scope: *public_scope
+      forbidden: ['(?i)\bregistry\b[^\n]{0,60}\b(live|shipped|generally available)\b']
+      qualifiers: &not_shipped ['(?i)\bnot (yet )?(shipped|built|live)\b', '(?i)design work',
+                                '(?i)\bplanned\b']
+    note: Becomes "built" when a signed index exists in bawbel-registry.
+
+  - id: C-15
+    claim: Identity beyond pins, reputation and delegation are not built
+    kind: state
+    check: identity_reputation_delegation
+    expect: not-built
+    owner: maintainer
+    params:
+      scope: *public_scope
+      forbidden: ['(?i)\b(reputation|trust scor\w*)\b[^\n]{0,60}\b(live|shipped)\b']
+      qualifiers: *not_shipped
+
+  - id: C-16
+    claim: No references to retired hosts
+    kind: number
+    check: stale_hosts
+    expect: 0
+    owner: maintainer
+    params:
+      scope: *public_scope
+      patterns: ['ave\.bawbel\.io', 'bawbel/bawbel-ave']
+    appears_in: []
+    note: >-
+      api.piranha.bawbel.io is not retired. Its corpus endpoints move to api.aveproject.org
+      and its threat-intel endpoints stay (ECOSYSTEM-RUNBOOK step 3).
+
+  - id: C-17
+    claim: PiranhaDB public endpoint count
+    kind: number
+    check: piranha_endpoints
+    expect: null
+    owner: maintainer
+    appears_in:
+      - {source: website, path: index.html, pattern: '(?i)\b(\d+) endpoints'}
+    note: >-
+      Code has route decorators; which of them are public is not knowable from the source.
+      Stays UNVERIFIED until someone checks the deployed API and sets expect.
+
+  - id: C-18
+    claim: No third-party vendor logo files in any repository
+    kind: number
+    check: third_party_logos
+    expect: 0
+    owner: maintainer
+    params:
+      scope: *public_scope
+      # Regexes matched against image file paths, case-insensitive.
+      vendors: [nvidia, crowdstrike, 'palo.?alto', openai, anthropic, salesforce,
+                '(^|[/_.-])sap([_.-]|$)']
+    appears_in: []
+
+  - id: C-19
+    claim: ClawHavoc is cited as one registry, ClawHub, historical, Antiy CERT
+    kind: wording
+    check: mention_rules
+    owner: maintainer
+    params:
+      scope: *public_scope
+      trigger: '\b1,?184\b'
+      require: ['(?i)clawhub']
+      forbidden: ['(?i)across (public )?registries']
+    note: Antiy CERT, 1,184 malicious skills in ClawHub's history, 12 author IDs, 2026-02-05.
+
+  - id: C-20
+    claim: ave_id is immutable once published
+    kind: wording
+    check: required_text
+    owner: maintainer
+    params:
+      source: ave
+      paths: [ARCHITECTURE.md, CONTRIBUTING.md]
+      pattern: '(?i)ave_id`? (values )?(is|are) immutable'
+    note: >-
+      Accurate policy, so the word "immutable" is allowed here. This entry exists so a
+      lint for "immutable" knows to allowlist it.

@@ -24,6 +24,20 @@ directory and deleted afterwards. The exit status is 1 when any claim fails.
 
 Tests: `pip install pytest && python -m pytest tests`.
 
+## Monthly review
+
+`.github/workflows/claims-review.yml` runs on the first of each month, UTC, and can be started
+by hand from the Actions tab. It runs `scripts/verify_claims.py` and opens an issue titled
+`Claims review YYYY-MM`. The issue lists every FAIL claim and every UNVERIFIED claim by id,
+with the whole `claims/STATUS.md` under a fold. It changes nothing in the repository, and it
+does not open a second issue for a month that already has one.
+
+A person closes each failing claim by fixing the surface or the register, as described under
+"Change a claim". An UNVERIFIED claim is listed so it does not stay unverified in silence.
+
+The workflow has no access to private repositories, so a claim that reads one, such as
+`registry`, shows as UNVERIFIED in the issue. Run the verifier locally for those.
+
 ## Results
 
 | Result | Meaning |

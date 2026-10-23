@@ -72,6 +72,31 @@ When reality moves, for example new AVE records are published, the claim fails w
 `expect` first and let the surface failures drive the follow-up PR in each repository.
 Never change `expect` to match a surface without measuring.
 
+## Status diagram
+
+`ecosystem-status.yaml` lists every component with a state and the claim that backs it.
+`scripts/render_status.py` draws `diagrams/status.mmd` from it, and writes the same diagram
+between the `status-diagram` markers in `profile/README.md`. A repository README can carry
+the same block: put the two marker comments where it should go and pass `--readme PATH`.
+
+| State | Meaning |
+|---|---|
+| `live` | Built and serving. Its evidence claim must be PASS in `claims/STATUS.md` |
+| `pre-release` | Built, not released |
+| `designed` | Designed, not built |
+| `offline` | Built, not serving now |
+| `not-built` | Design work only |
+
+```bash
+python scripts/render_status.py --write              # regenerate after editing the status file
+python scripts/render_status.py --check              # fail if a generated file is stale
+python scripts/render_status.py --verify-evidence    # fail if a live component's claim is not PASS
+```
+
+`--check` needs only this repository. `--verify-evidence` reads the last run of
+`verify_claims.py`, so it can fail because of drift in another repository. That is intended:
+a component is not drawn as live while a public claim about it is wrong somewhere.
+
 ## Retire a claim
 
 Delete the entry and add a row to the table below. Ids are not reused.

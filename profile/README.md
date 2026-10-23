@@ -27,7 +27,7 @@ Bawbel is vendor-neutral. Runtime enforcement today covers MCP tool calls.
 |---|---|---|---|
 | [scanner](https://github.com/bawbel/scanner) | Static detection for skill files, MCP servers, and system prompts. CLI, pre-commit, CI. JSON and SARIF. | v1.3.0 on PyPI | See repo |
 | [gate](https://github.com/bawbel/gate) | Runtime enforcement for MCP agents. Capability manifests, session taint, trifecta invariant, hash-chained audit log. | v1.0 feature-complete, pre-release. Install from source | Apache 2.0 |
-| [piranha-api](https://github.com/bawbel/piranha-api) | PiranhaDB. Threat intelligence and record lookup for agentic AI vulnerabilities, built on AVE. | Live | Apache 2.0 |
+| [piranha-api](https://github.com/bawbel/piranha-api) | PiranhaDB. Threat intelligence and record lookup for agentic AI vulnerabilities, built on AVE. | Offline. The hosted API is not serving | Apache 2.0 |
 | [integrations](https://github.com/bawbel/integrations) | GitHub Actions, GitLab CI, Jenkins, CircleCI, Bitbucket Pipelines, pre-commit. | Live | Apache 2.0 |
 | [bawbel-mcp](https://github.com/bawbel/bawbel-mcp) | MCP server exposing the scanner as agent-callable tools. Read-only, no private-data tools, no egress tools. | Live | Apache 2.0 |
 | [VS Code extension](https://marketplace.visualstudio.com/items?itemName=bawbel.bawbel-scanner) | Inline diagnostics while editing agent code and MCP configs. | v1.1.0 on Marketplace | Apache 2.0 |
@@ -61,7 +61,8 @@ bawbel ssc https://server.example.com   # scan an MCP server card without starti
 bawbel report ./skill.md                # findings plus remediation guidance
 ```
 
-The scanner never executes what it scans.
+The scanner never starts an MCP server and executes nothing by default. An optional
+Docker sandbox stage runs skill content in isolation.
 
 Six engines run in parallel: pattern, YARA, Semgrep, Magika content-type verification,
 optional LLM semantic analysis, and an optional Docker behavioral sandbox. Findings are
@@ -193,9 +194,9 @@ What exists today:
 | Layer | Component | State |
 |---|---|---|
 | Behavioral intelligence | AVE, separate org | Live, published standard |
-| Threat intelligence | PiranhaDB | Live |
+| Threat intelligence | PiranhaDB | Offline |
 | Discovery | bawbel-scanner | Live |
-| Policy | capability-manifest/v1 | Live |
+| Policy | capability-manifest/v1 | Schema published, enforced by the pre-release gate |
 | Enforcement | bawbel-gate | Pre-release |
 | Evidence | gate hash-chained audit log | Pre-release |
 | Identity, reputation, delegation | none | Design work, not started |

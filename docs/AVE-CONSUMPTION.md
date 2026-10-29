@@ -40,7 +40,7 @@ AVE publishes its records as one JSON array in `aveproject/ave`:
 | File | What it is |
 |---|---|
 | `dist/ave-records-latest.json` | All active records, regenerated when records change |
-| `dist/ave-records-latest.manifest.json` | `schema_version`, `record_count`, `generated_at`, for a quick check before parsing |
+| `dist/ave-records-latest.manifest.json` | `schema_version`, `record_count`, `generated_at`, `source`, for a quick check before parsing. From the v1.2.0 catalog release it also carries `sha256` |
 | `dist/ave-records-v<version>.json` | A frozen snapshot, committed at each schema transition |
 
 AVE's own implementer guide (`docs/specs/ave-implementer-guide.md` in `aveproject/ave`) says
@@ -59,8 +59,11 @@ curl -fsSL "$URL" -o ave-records.json
 
 ### Verify what you consumed
 
-AVE does not publish a digest of the file. R3 therefore asks the consumer to record its own:
-the SHA-256 of the exact bytes it used.
+At the commit in the worked example below, AVE publishes no digest of the file. Its v1.2.0
+catalog release (2026-10-29) does: the manifest carries `sha256`, and the release carries a
+`SHA256SUMS` asset. At that tag the manifest's `sha256` equals the SHA-256 of
+`dist/ave-records-latest.json`. Either way, R3 asks the consumer to record its own: the
+SHA-256 of the exact bytes it used.
 
 ```bash
 sha256sum ave-records.json
@@ -74,7 +77,9 @@ and so the digest.
 Worked example, at `aveproject/ave` commit `6b9f1748c6ceedc1787af7a114361a216d3017d1`: the
 file has 87 records, `schema_version` 1.1.0, and SHA-256
 `e29c3c8bcdcffd74c9d9f0750b5d5b5c28da40321076e50def980507c72f6f70`. A later commit has its
-own digest.
+own digest: at the v1.2.0 tag (`a18315536706365021b514ab940392ed0805897e`) the file has 89
+records, `schema_version` 1.2.0, and SHA-256
+`92e002e98cdd10f5de36e0ccfa80696b623cdadf302cc4d884f2a33b7fd94390`.
 
 What R3 asks a build or run to record:
 
@@ -97,7 +102,7 @@ This is a snapshot, taken on 2026-10-23 from the `develop` branches (scanner `f2
 | scanner | `scanner/owasp_mcp_map.py` | The scanner's own OWASP MCP mapping | Breaks R6. 26 of its 45 entries differ from the `owasp_mcp` field AVE publishes |
 | scanner | `scanner/core/toxic_flows/capabilities.py` | A capability tag per AVE id, the vocabulary of toxic flow detection | Bawbel-owned, so R7 applies. It does not record the corpus hash it was derived for |
 | gate | `mitigations/ave-mitigations.json`, `schemas/bawbel-ave-mitigations-v1.json` | Enforcement stanzas keyed by AVE id, kept out of the standard on purpose | Bawbel-owned, so R7 applies. It does not record the corpus hash it was derived for |
-| gate | `schemas/ave-1.2.json` | A schema titled "AVE Record Schema v1.2", with its `$id` on `schemas.bawbel.io`. AVE publishes schema 1.0.0 and 1.1.0 | Not published by AVE, so R7 requires it to be labelled as Bawbel's |
+| gate | `schemas/ave-1.2.json` | A schema titled "AVE Record Schema v1.2", with its `$id` on `schemas.bawbel.io`. AVE publishes schema 1.0.0, 1.1.0 and 1.2.0 (`schema/ave-record-1.2.0.schema.json`), which is a different schema: this file defines `id`, `triage` and `capability_mitigation`, which AVE's 1.2.0 does not | Not published by AVE, so R7 requires it to be labelled as Bawbel's |
 | piranha-api | `sync_records.py`, `records/` | A copy of AVE records, read from the old `bawbel/ave` path at `main`, one file at a time | Breaks R2, R3 and R4 |
 
 A new Bawbel-derived table is keyed by AVE id and by the corpus hash it was derived for. A

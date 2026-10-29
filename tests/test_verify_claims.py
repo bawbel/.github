@@ -164,10 +164,69 @@ def test_no_shell_true_in_verifier():
 def test_register_is_complete():
     register = yaml.safe_load((ROOT / "claims/register.yaml").read_text())
     ids = [c["id"] for c in register["claims"]]
-    assert ids == [f"C-{i:02d}" for i in range(1, 21)]
+    assert ids == [f"C-{i:02d}" for i in range(1, 22)]
     for claim in register["claims"]:
         assert claim["check"] in vc.CHECKS, claim["id"]
         assert claim["kind"] in ("number", "wording", "state", "link"), claim["id"]
         for surface in claim.get("appears_in") or []:
             assert surface["source"] in register["sources"], claim["id"]
             assert re.compile(surface["pattern"]).groups >= 1, claim["id"]
+
+
+def contract_claim(**params) -> dict:
+    base = {"source": "self", "path": "docs/AVE-CONSUMPTION.md", "rules": 10}
+    base.update(params)
+    return {"id": "C-T", "claim": "contract", "kind": "state", "check": "consumption_contract",
+            "expect": 10, "params": base}
+
+
+def contract_repo(tmp_path: Path, rows: list[str]) -> "vc.Context":
+    repo = tmp_path / "self"
+    (repo / "docs").mkdir(parents=True)
+    table = "| # | Rule |\n|---|---|\n" + "\n".join(f"| {r} | **Name.** text |" for r in rows)
+    (repo / "docs" / "AVE-CONSUMPTION.md").write_text("# Contract\n\n" + table + "\n")
+    return vc.Context(sources={"self": repo}, self_source="self")
+
+
+def test_contract_with_ten_rules_in_order_passes(tmp_path):
+    ctx = contract_repo(tmp_path, [f"R{i}" for i in range(1, 11)])
+    assert vc.evaluate(ctx, contract_claim()).status == vc.PASS
+
+
+@pytest.mark.parametrize("rows", [
+    [f"R{i}" for i in range(1, 11) if i != 7],                     # R7 missing
+    [f"R{i}" for i in range(1, 11)] + ["R10"],                     # R10 twice
+    ["R2", "R1"] + [f"R{i}" for i in range(3, 11)],                # out of order
+    [f"R{i}" for i in range(1, 10)],                               # only nine
+    [f"R{i}" for i in range(1, 12)],                               # an eleventh nobody checks
+], ids=["missing", "duplicate", "order", "nine", "eleven"])
+def test_contract_with_wrong_rules_fails(tmp_path, rows):
+    ctx = contract_repo(tmp_path, rows)
+    assert vc.evaluate(ctx, contract_claim()).status == vc.FAIL
+
+
+def test_contract_file_missing_fails(tmp_path):
+    repo = tmp_path / "self"
+    repo.mkdir()
+    ctx = vc.Context(sources={"self": repo}, self_source="self")
+    assert vc.evaluate(ctx, contract_claim()).status == vc.FAIL
+
+
+def test_contract_source_unavailable_is_unverified(tmp_path):
+    ctx = vc.Context(sources={"self": None})
+    assert vc.evaluate(ctx, contract_claim()).status == vc.UNVERIFIED
+
+
+def test_rule_in_prose_is_not_a_rule(tmp_path):
+    repo = tmp_path / "self"
+    (repo / "docs").mkdir(parents=True)
+    (repo / "docs" / "AVE-CONSUMPTION.md").write_text("R1 is mentioned here\n| R1 text\n")
+    ctx = vc.Context(sources={"self": repo}, self_source="self")
+    assert vc.evaluate(ctx, contract_claim()).status == vc.FAIL
+
+
+def test_the_contract_in_this_repository():
+    """docs/AVE-CONSUMPTION.md has R1 to R10 in order and no em dash."""
+    ctx = vc.Context(sources={"self": ROOT}, self_source="self")
+    assert vc.evaluate(ctx, contract_claim()).status == vc.PASS
+    assert "\u2014" not in (ROOT / "docs" / "AVE-CONSUMPTION.md").read_text(encoding="utf-8")

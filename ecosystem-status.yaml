@@ -1,0 +1,31 @@
+# One entry per component of the ecosystem. scripts/render_status.py draws diagrams/status.mmd
+# and the marked block in profile/README.md from this file. How: docs/CLAIMS.md.
+#
+# state:  live | pre-release | designed | offline | not-built
+#         A component may be `live` only if its evidence claim is PASS in claims/STATUS.md
+#         (python scripts/render_status.py --verify-evidence).
+# evidence: the claim id in claims/register.yaml that backs the state.
+# boundary: `outside` draws a component outside the Bawbel box, dashed. AVE is governed
+#         separately, so it is drawn outside.
+
+schema: bawbel/ecosystem-status/v1
+
+components:
+  - {id: ave,        label: "AVE, separate org",      state: live,        evidence: C-01, boundary: outside}
+  - {id: scanner,    label: "Scanner and surfaces",   state: live,        evidence: C-03}
+  - {id: piranhadb,  label: "PiranhaDB",              state: offline,     evidence: C-17}
+  - {id: gate,       label: "Gate",                   state: pre-release, evidence: C-10}
+  - {id: audit,      label: "Hash-chained audit log", state: pre-release, evidence: C-12}
+  - {id: hub,        label: "Hub, inside gate repo",  state: pre-release, evidence: C-13}
+  - {id: registry,   label: "Registry",               state: designed,    evidence: C-14}
+  - {id: identity,   label: "Identity beyond pins",   state: not-built,   evidence: C-15}
+  - {id: reputation, label: "Reputation and trust",   state: not-built,   evidence: C-15}
+  - {id: delegation, label: "Delegation",             state: not-built,   evidence: C-15}
+
+edges:
+  - [ave, scanner]
+  - [ave, piranhadb]
+  - [scanner, registry]
+  - [registry, gate]
+  - [gate, audit]
+  - [audit, hub]

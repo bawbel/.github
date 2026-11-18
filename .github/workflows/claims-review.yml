@@ -1,0 +1,50 @@
+# Monthly claims review (docs/CLAIMS.md, "Monthly review").
+# On the first of each month this runs scripts/verify_claims.py and opens an issue titled
+# "Claims review YYYY-MM" with every FAIL and every UNVERIFIED claim listed. It changes
+# nothing in the repository. A person closes each failing claim by fixing the surface or the
+# register.
+name: Claims review
+
+on:
+  schedule:
+    - cron: "17 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - run: pip install --quiet -r scripts/requirements-claims.txt
+
+      - name: Run the claims verifier
+        run: |
+          # Exit 1 means some claim failed, which is what the review is for. Any other code,
+          # or no output file, is a broken run and fails this job.
+          code=0
+          python3 scripts/verify_claims.py --output "$RUNNER_TEMP/STATUS.md" || code=$?
+          if [ "$code" -gt 1 ] || [ ! -s "$RUNNER_TEMP/STATUS.md" ]; then
+            echo "::error::verify_claims.py did not produce a status file (exit $code)"
+            exit 1
+          fi
+
+      - name: Open the review issue
+        run: |
+          set -euo pipefail
+          month="$(date -u +%Y-%m)"
+          title="$(python3 scripts/claims_review.py --print-title --month "$month")"
+          existing="$(gh issue list --state all --search "$title in:title" --json title --jq '.[].title')"
+          if printf '%s\n' "$existing" | grep -Fxq "$title"; then
+            echo "$title already exists, nothing to do"
+            exit 0
+          fi
+          python3 scripts/claims_review.py --status "$RUNNER_TEMP/STATUS.md" --month "$month" > "$RUNNER_TEMP/body.md"
+          gh issue create --title "$title" --body-file "$RUNNER_TEMP/body.md"

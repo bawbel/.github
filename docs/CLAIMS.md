@@ -24,6 +24,20 @@ directory and deleted afterwards. The exit status is 1 when any claim fails.
 
 Tests: `pip install pytest && python -m pytest tests`.
 
+## Monthly review
+
+`.github/workflows/claims-review.yml` runs on the first of each month, UTC, and can be started
+by hand from the Actions tab. It runs `scripts/verify_claims.py` and opens an issue titled
+`Claims review YYYY-MM`. The issue lists every FAIL claim and every UNVERIFIED claim by id,
+with the whole `claims/STATUS.md` under a fold. It changes nothing in the repository, and it
+does not open a second issue for a month that already has one.
+
+A person closes each failing claim by fixing the surface or the register, as described under
+"Change a claim". An UNVERIFIED claim is listed so it does not stay unverified in silence.
+
+The workflow has no access to private repositories, so a claim that reads one, such as
+`registry`, shows as UNVERIFIED in the issue. Run the verifier locally for those.
+
 ## Results
 
 | Result | Meaning |
@@ -71,6 +85,31 @@ When reality moves, for example new AVE records are published, the claim fails w
 "measured X, register expects Y". Update `expect` in the same PR as the surfaces, or update
 `expect` first and let the surface failures drive the follow-up PR in each repository.
 Never change `expect` to match a surface without measuring.
+
+## Status diagram
+
+`ecosystem-status.yaml` lists every component with a state and the claim that backs it.
+`scripts/render_status.py` draws `diagrams/status.mmd` from it, and writes the same diagram
+between the `status-diagram` markers in `profile/README.md`. A repository README can carry
+the same block: put the two marker comments where it should go and pass `--readme PATH`.
+
+| State | Meaning |
+|---|---|
+| `live` | Built and serving. Its evidence claim must be PASS in `claims/STATUS.md` |
+| `pre-release` | Built, not released |
+| `designed` | Designed, not built |
+| `offline` | Built, not serving now |
+| `not-built` | Design work only |
+
+```bash
+python scripts/render_status.py --write              # regenerate after editing the status file
+python scripts/render_status.py --check              # fail if a generated file is stale
+python scripts/render_status.py --verify-evidence    # fail if a live component's claim is not PASS
+```
+
+`--check` needs only this repository. `--verify-evidence` reads the last run of
+`verify_claims.py`, so it can fail because of drift in another repository. That is intended:
+a component is not drawn as live while a public claim about it is wrong somewhere.
 
 ## Retire a claim
 

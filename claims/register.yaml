@@ -279,3 +279,19 @@ claims:
     note: >-
       Accurate policy, so the word "immutable" is allowed here. This entry exists so a
       lint for "immutable" knows to allowlist it.
+
+  - id: C-21
+    claim: Bawbel consumes AVE and does not modify it (the consumption contract is published)
+    kind: state
+    check: consumption_contract
+    expect: 10
+    owner: maintainer
+    params:
+      source: profile
+      path: docs/AVE-CONSUMPTION.md
+      rules: 10
+    appears_in: []
+    note: >-
+      Checks that docs/AVE-CONSUMPTION.md has the rules R1 to R10, once each, in order.
+      It does not check that each component follows them: the document lists where one does
+      not yet, and C-02 measures the scanner's hand-copied table.

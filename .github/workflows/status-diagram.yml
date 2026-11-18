@@ -1,0 +1,38 @@
+# The status diagram is generated from ecosystem-status.yaml (docs/CLAIMS.md, "Status diagram").
+# Three jobs, so a red check says which of the three it is:
+#   tests     the generator's own tests
+#   current   diagrams/status.mmd and the README block are what --write would produce
+#   evidence  every `live` component has a PASS in claims/STATUS.md. It can fail because of
+#             drift in another repository, which is its purpose.
+name: Status diagram
+
+on:
+  pull_request:
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - run: pip install --quiet -r scripts/requirements-claims.txt "pytest>=8,<10"
+      - run: python3 -m pytest tests -q
+
+  current:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - run: pip install --quiet -r scripts/requirements-claims.txt
+      - run: python3 scripts/render_status.py --check
+
+  evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - run: pip install --quiet -r scripts/requirements-claims.txt
+      - run: python3 scripts/render_status.py --verify-evidence

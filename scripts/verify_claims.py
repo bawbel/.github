@@ -541,6 +541,26 @@ def required_text(ctx: Context, params: dict[str, Any]) -> Measured:
                     details=found or ["required statement not found"], violations=missing)
 
 
+def consumption_contract(ctx: Context, params: dict[str, Any]) -> Measured:
+    """The rules table of a contract document: R1 to Rn, once each, in order.
+
+    A rule counts only as a table row that starts with its id, so a rule named in prose is
+    not a rule. Rows beyond `rules` fail too, so the number in the register stays true.
+    """
+    root = ctx.repo(params["source"])
+    path = root / params["path"]
+    where = f"{params['source']}:{params['path']}"
+    if not path.is_file():
+        return Measured(0, f"{where} not found", details=[f"{where} not found"], violations=1)
+    found = re.findall(r"^\|\s*(R\d+)\s*\|", path.read_text(encoding="utf-8"), re.MULTILINE)
+    wanted = [f"R{i}" for i in range(1, int(params["rules"]) + 1)]
+    problems = []
+    if found != wanted:
+        problems.append(f"rules found {found}, wanted {wanted}")
+    return Measured(len(found), f"{len(found)} rule row(s) in {where} at {_at(ctx, params['source'])}",
+                    details=problems, violations=len(problems))
+
+
 CHECKS: dict[str, Callable[[Context, dict[str, Any]], Measured]] = {
     f.__name__: f
     for f in (
@@ -548,6 +568,7 @@ CHECKS: dict[str, Callable[[Context, dict[str, Any]], Measured]] = {
         uncovered_runtime, toxic_flows, detection_rules, detection_engines, license_apache,
         gate_pip_install, registry_state, identity_reputation_delegation, stale_hosts,
         piranha_endpoints, third_party_logos, forbidden_text, mention_rules, required_text,
+        consumption_contract,
     )
 }
 

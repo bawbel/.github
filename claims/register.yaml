@@ -31,24 +31,27 @@ claims:
     claim: AVE records published
     kind: number
     check: ave_published
-    expect: 87
+    expect: 89
     owner: maintainer
     appears_in:
       - {source: website, path: index.html,
          pattern: 'stat-num">(\d+)</div><div class="stat-label">AVE Records'}
-      - {source: website, path: index.html, pattern: *records}
-      - {source: website, path: docs/index.html, pattern: *records}
-      - {source: website, path: README.md, pattern: *records}
+      - {source: website, path: index.html, pattern: *records, absent: true}
+      - {source: website, path: docs/index.html, pattern: *records, absent: true}
+      - {source: website, path: README.md, pattern: *records, absent: true}
       - {source: scanner, path: README.md, pattern: 'AVE_Records-(\d+)'}
       - {source: scanner, path: README.md, pattern: '<!-- count:published -->(\d+)<!-- /count -->'}
-      - {source: gate, path: ARCHITECTURE.md, pattern: *records}
-      - {source: piranha-api, path: README.md, pattern: *records}
-      - {source: integrations, path: README.md, pattern: *records}
-      - {source: integrations, path: vscode/README.md, pattern: *records}
-      - {source: integrations, path: vscode/package.json, pattern: *records}
+      - {source: gate, path: ARCHITECTURE.md, pattern: *records, absent: true}
+      - {source: piranha-api, path: README.md, pattern: *records, absent: true}
+      - {source: integrations, path: README.md, pattern: *records, absent: true}
+      - {source: integrations, path: vscode/README.md, pattern: *records, absent: true}
+      - {source: integrations, path: vscode/package.json, pattern: *records, absent: true}
     note: >-
       gate DESIGN.md 9.2 says "51 published records" about the v1.1 to v1.2 migration of
       the corpus as it was then. Historical, so not listed.
+      An entry with `absent: true` is a surface that no longer states the count: the number
+      was removed, linked or generated (rule R5 of docs/AVE-CONSUMPTION.md). It passes while
+      its pattern matches nothing, and fails, naming the line, if a count is typed back in.
 
   - id: C-02
     claim: AVE records with scanner metadata (scanner/ave_meta.py)
@@ -295,3 +298,19 @@ claims:
       Checks that docs/AVE-CONSUMPTION.md has the rules R1 to R10, once each, in order.
       It does not check that each component follows them: the document lists where one does
       not yet, and C-02 measures the scanner's hand-copied table.
+
+  - id: C-22
+    claim: No hand-typed AVE record count in a badge
+    kind: wording
+    check: forbidden_text
+    owner: maintainer
+    params:
+      scope: *public_scope
+      forbidden:
+        - '(?i)\bAVE(?:_|%20|-)records-\d+-'
+      qualifiers: ['<!-- count:']
+    note: >-
+      Absence check for the badges that the "N records" pattern of C-01 cannot match: a
+      badge URL has no space before the number ("AVE_Records-48-4A90D9"). A count that a
+      script writes between <!-- count:NAME --> markers, as the scanner README does, is
+      generated, so a line that carries the marker is qualified.

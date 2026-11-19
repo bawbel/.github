@@ -75,6 +75,50 @@ def test_surface_pattern_missing_fails(tmp_path):
     assert vc.evaluate(ctx, number_claim(appears_in=[surface])).status == vc.FAIL
 
 
+ABSENT_SURFACE = {"source": "website", "path": "index.html",
+                  "pattern": r"(?i)\b(\d+) AVE records\b", "absent": True}
+
+
+def absent_context(tmp_path: Path, text: str | None) -> "vc.Context":
+    site = tmp_path / "site"
+    site.mkdir()
+    if text is not None:
+        (site / "index.html").write_text(text)
+    return vc.Context(sources={"ave": make_ave(tmp_path, 3), "website": site})
+
+
+def test_absent_surface_without_a_count_passes(tmp_path):
+    ctx = absent_context(tmp_path, "<p>The published AVE corpus, linked.</p>\n")
+    assert vc.evaluate(ctx, number_claim(appears_in=[ABSENT_SURFACE])).status == vc.PASS
+
+
+def test_absent_surface_fails_when_a_count_is_typed_back_in(tmp_path):
+    ctx = absent_context(tmp_path, "fine\n<p>51 AVE records</p>\n")
+    out = vc.evaluate(ctx, number_claim(appears_in=[ABSENT_SURFACE]))
+    assert out.status == vc.FAIL
+    assert ("website:index.html:2: states 51, this surface must not state the count"
+            in out.problems[0])
+
+
+def test_absent_surface_refuses_even_the_right_number(tmp_path):
+    ctx = absent_context(tmp_path, "<p>3 AVE records</p>\n")  # expect is 3
+    assert vc.evaluate(ctx, number_claim(appears_in=[ABSENT_SURFACE])).status == vc.FAIL
+
+
+def test_absent_surface_with_a_missing_file_fails(tmp_path):
+    ctx = absent_context(tmp_path, None)
+    out = vc.evaluate(ctx, number_claim(appears_in=[ABSENT_SURFACE]))
+    assert out.status == vc.FAIL
+    assert "file not found" in out.problems[0]
+
+
+def test_absent_surface_in_an_unavailable_source_is_unverified(tmp_path):
+    ctx = vc.Context(sources={"ave": make_ave(tmp_path, 3), "website": None},
+                     reasons={"website": "offline"})
+    out = vc.evaluate(ctx, number_claim(appears_in=[ABSENT_SURFACE]))
+    assert out.status == vc.UNVERIFIED
+
+
 def test_fail_outranks_unverified(tmp_path):
     site = tmp_path / "site"
     site.mkdir()
@@ -164,13 +208,14 @@ def test_no_shell_true_in_verifier():
 def test_register_is_complete():
     register = yaml.safe_load((ROOT / "claims/register.yaml").read_text())
     ids = [c["id"] for c in register["claims"]]
-    assert ids == [f"C-{i:02d}" for i in range(1, 22)]
+    assert ids == [f"C-{i:02d}" for i in range(1, 23)]
     for claim in register["claims"]:
         assert claim["check"] in vc.CHECKS, claim["id"]
         assert claim["kind"] in ("number", "wording", "state", "link"), claim["id"]
         for surface in claim.get("appears_in") or []:
             assert surface["source"] in register["sources"], claim["id"]
             assert re.compile(surface["pattern"]).groups >= 1, claim["id"]
+            assert isinstance(surface.get("absent", False), bool), claim["id"]
 
 
 def contract_claim(**params) -> dict:

@@ -98,7 +98,7 @@ This is a snapshot, taken on 2026-10-23 from the `develop` branches (scanner `f2
 
 | Component | Path | What it holds | Against the rules |
 |---|---|---|---|
-| scanner | `scanner/ave_meta.py` | Four AVE fields typed by hand, for 51 of the 87 published records | Breaks R5. Records without an entry fall under R8 |
+| scanner | `scanner/ave_meta.py` | Four AVE fields typed by hand, for some of the published records (C-02 in `claims/register.yaml` counts the entries) | Breaks R5. Records without an entry fall under R8 |
 | scanner | `scanner/owasp_mcp_map.py` | The scanner's own OWASP MCP mapping | Breaks R6. 26 of its 45 entries differ from the `owasp_mcp` field AVE publishes |
 | scanner | `scanner/core/toxic_flows/capabilities.py` | A capability tag per AVE id, the vocabulary of toxic flow detection | Bawbel-owned, so R7 applies. It does not record the corpus hash it was derived for |
 | gate | `mitigations/ave-mitigations.json`, `schemas/bawbel-ave-mitigations-v1.json` | Enforcement stanzas keyed by AVE id, kept out of the standard on purpose | Bawbel-owned, so R7 applies. It does not record the corpus hash it was derived for |

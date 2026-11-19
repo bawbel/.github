@@ -40,7 +40,7 @@ claims:
       - {source: website, path: docs/index.html, pattern: *records}
       - {source: website, path: README.md, pattern: *records}
       - {source: scanner, path: README.md, pattern: 'AVE_Records-(\d+)'}
-      - {source: scanner, path: README.md, pattern: *records}
+      - {source: scanner, path: README.md, pattern: '<!-- count:published -->(\d+)<!-- /count -->'}
       - {source: gate, path: ARCHITECTURE.md, pattern: *records}
       - {source: piranha-api, path: README.md, pattern: *records}
       - {source: integrations, path: README.md, pattern: *records}

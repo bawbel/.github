@@ -594,20 +594,25 @@ def check_surface(ctx: Context, surface: dict[str, str], expect: Any, out: Outco
         out.worsen(FAIL, f"{where}: file not found, update appears_in")
         return
     rx = re.compile(surface["pattern"])
+    absent = bool(surface.get("absent"))  # an absence check: the surface must not state it
     found = False
     for lineno, line in enumerate(path.read_text(encoding="utf-8", errors="replace")
                                   .splitlines(), 1):
         for match in rx.finditer(line):
             found = True
-            stated = parse_number(match.group(1))
             loc = f"{where}:{lineno}"
+            if absent:
+                out.worsen(FAIL, f"{loc}: states {match.group(1)}, "
+                                 "this surface must not state the count")
+                continue
+            stated = parse_number(match.group(1))
             if stated is None:
                 out.worsen(FAIL, f"{loc}: no number in {match.group(0)!r}")
             elif expect is None:
                 out.details.append(f"{loc}: states {stated}")
             elif stated != expect:
                 out.worsen(FAIL, f"{loc}: states {stated}, register expects {expect}")
-    if not found:
+    if not found and not absent:
         out.worsen(FAIL, f"{where}: pattern not found, the claim moved or was removed")
 
 

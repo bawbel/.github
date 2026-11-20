@@ -98,8 +98,8 @@ claims:
     appears_in:
       - {source: website, path: index.html,
          pattern: 'stat-num">(\d+)</div><div class="stat-label">Attack Chains'}
-      - {source: website, path: index.html, pattern: '(?i)\b(\d+) built-in attack chains'}
-      - {source: website, path: docs/index.html, pattern: '(?i)\ball (\d+) toxic flow chains'}
+      - {source: website, path: index.html, pattern: '(?i)\b(\d+) built-in attack chains', absent: true}
+      - {source: website, path: docs/index.html, pattern: '(?i)\ball (\d+) toxic flow chains', absent: true}
 
   - id: C-07
     claim: Detection rules (pattern + YARA + Semgrep)
@@ -110,8 +110,8 @@ claims:
     appears_in:
       - {source: website, path: index.html,
          pattern: 'stat-num">(\d+)</div><div class="stat-label">Detection Rules'}
-      - {source: website, path: index.html, pattern: '(?i)\b(\d+) rules total'}
-      - {source: website, path: docs/index.html, pattern: '(?i)\b(\d+) detection rules'}
+      - {source: website, path: index.html, pattern: '(?i)\b(\d+) rules total', absent: true}
+      - {source: website, path: docs/index.html, pattern: '(?i)\b(\d+) detection rules', absent: true}
 
   - id: C-08
     claim: Detection engines (meta_analyzer is an FP filter, not an engine)
@@ -122,8 +122,8 @@ claims:
     appears_in:
       - {source: website, path: index.html,
          pattern: 'stat-num">(\d+)</div><div class="stat-label">Detection Engines'}
-      - {source: website, path: index.html, pattern: '<h3>(\d+) Detection Engines'}
-      - {source: website, path: docs/index.html, pattern: '(?i)\b(\d+) detection engines'}
+      - {source: website, path: index.html, pattern: '<h3>(\d+) Detection Engines', absent: true}
+      - {source: website, path: docs/index.html, pattern: '(?i)\b(\d+) detection engines', absent: true}
       - {source: scanner, path: README.md,
          pattern: '(?i)\b(\d+|four|five|six|seven|eight) engines run in parallel'}
       - {source: scanner, path: docs/README.md,
@@ -240,7 +240,7 @@ claims:
     expect: null
     owner: maintainer
     appears_in:
-      - {source: website, path: index.html, pattern: '(?i)\b(\d+) endpoints'}
+      - {source: website, path: index.html, pattern: '(?i)\b(\d+) endpoints', absent: true}
     note: >-
       Code has route decorators; which of them are public is not knowable from the source.
       Stays UNVERIFIED until someone checks the deployed API and sets expect.

@@ -69,6 +69,11 @@ and the gap is still listed under Details.
 - **appears_in**: the first group of each `pattern` captures the stated number, as digits
   or a word up to twenty. Every match must equal `expect`. A pattern that matches nothing
   fails, because the claim moved or was removed and the register is out of date.
+- **absent**: an `appears_in` entry with `absent: true` is an absence check. The surface
+  must not match its pattern, so a match fails and names the line, whatever number it states.
+  Use it for a surface that links to a value or generates it instead of stating it (rule R5 of
+  docs/AVE-CONSUMPTION.md). A missing file still fails, and an unavailable source is still
+  UNVERIFIED.
 
 ## Add a claim
 

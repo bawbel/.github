@@ -82,7 +82,7 @@ by a command (the command shown), known limits, items that are unverified, and l
 
 ## Posting rules (HUMAN-ONLY)
 
-- No pricing or commercial language. No em dashes. No word that claims a component is protected, certified or
+- No pricing or commercial language. No em dashes. No word that claims a component is protected, accredited or
   independently reviewed.
 - Numbers only from the fact sheet, with the command that produced them. State limits and what is unverified.
 - Say that you maintain the project, and read the current rules of each site or subreddit on the day. If they bar project

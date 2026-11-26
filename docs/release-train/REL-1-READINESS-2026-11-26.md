@@ -60,7 +60,7 @@ Sources for the table: `git show` and `git grep` on the commits above; `git rev-
 - **gate** needs the 0.1.0 and 0.1.1 mismatch settled before anything is tagged, and has no content gap between branches.
 - **integrations** and **bawbel-mcp** need their `main` and `develop` brought together first. integrations also needs a
   CHANGELOG, one version, and a publish path (INT-C7).
-- Whether a component ships in a given month is the maintainer's call (DEC-56). This report states facts only.
+- Whether a component ships in a given month is the maintainer's call. This report states facts only.
 
 ## Not done
 
